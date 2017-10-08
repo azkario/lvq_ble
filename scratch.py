@@ -1,6 +1,7 @@
 import csv
 import random
 import numpy as np
+import matplotlib.pyplot as plt
 import scipy.spatial as spatial
 
 
@@ -15,6 +16,33 @@ class LVQ():
         self.qtd_caracteristicas = 0
         self.amplitudes = []
         self.qtd_caracteristicas = len(self.dados[0]) - 1
+
+    def nancosinedist(self,a,b):
+        b = b.T  # transpose
+        a = np.array(list(a))
+
+        a_sq = np.square(a)
+
+        if a.ndim > 1:
+            a_nansum = np.nansum(a_sq, axis=1)  # sum over rows
+        else:
+            a_nansum = a_sq
+        a_nansum = np.transpose(a_nansum)
+        normA = np.sqrt(a_nansum)
+        # force normA to be a column vector
+        normA = normA[:, np.newaxis]
+
+        b_sq = np.square(b)
+        b_nansum = np.nansum(b_sq, axis=0)  # cols
+        normB = np.sqrt(b_nansum)
+
+        a = np.nan_to_num(a)
+        b = np.nan_to_num(b)
+
+        cos_dist = 1 - ((np.dot(a, b)) / normA) / normB
+
+        return cos_dist
+        # print(C)
 
     def normalizar(self):
         """
@@ -44,7 +72,7 @@ class LVQ():
         """
         Returns the data codebook, that is, the elements that best represent the whole
          : param t: initial learning rate
-         Parameters: number of times
+         : param e: numero de epocas / number of iteration
          : param n: number of coodbook elements
         """
         # Geracacao aleatorio dos elementos iniciais do codebook
@@ -55,16 +83,20 @@ class LVQ():
             for caracteristica in range(self.qtd_caracteristicas + 1):
                 self.codebook[i][caracteristica] = random.choice(self.dados)[caracteristica]
 
+
         for epoca in range(e):
-            taxa = t * (1.0 - (epoca / float(e)))
+            taxa = t * (1.0 - (epoca / float(e))) #rate
             for elemento in self.treino:
-                representante = self.encontrar_mais_proximo(elemento, self.codebook)
+                representante = self.encontrar_mais_proximo(elemento, self.codebook) #return new representation (from elemento training data) that closer than all current-codebook
                 o = -1
-                if representante[-1] == elemento[-1]:
+                if representante[-1] == elemento[-1]: # compare class-label. If the same, proceed!
                     o = 1
-                for caracteristica in range(self.qtd_caracteristicas):
+                for caracteristica in range(self.qtd_caracteristicas): #proceed to update representante
                     erro = (elemento[caracteristica] - representante[caracteristica])
                     representante[caracteristica] += (erro * taxa * o)
+
+        #     print("end of elemento iteration")
+        # print("end of epoca iteration")
 
     def testar(self):
         """
@@ -79,16 +111,22 @@ class LVQ():
 
         return precisao
 
+#elemento = list element data (tiap kolom). From training data
+#lista = list of list data (8rows * 5 cols). From current codebook
+    #resposta => result
     def encontrar_mais_proximo(self, elemento, lista):
         """
         Performs the classification for each element of the test set and returns the accuracy of the algorithm
-         : param element: vector to which the nearest vector of a given list is due
-         : stop list: list of vectors
+         : param elemento: vector to which the nearest vector of a given list is due
+         : param lista: list of vectors
         """
-        resposta = [lista[0], spatial.distance.euclidean(elemento[0:-1], lista[0][0:-1])]
-        for i in lista:
-            distancia = spatial.distance.euclidean(elemento[0:-1], i[0:-1])
-            if distancia < resposta[1]:
+        sz = len(elemento)-1; #size_of_element (without label)
+        dstnce = [self.nancosinedist(np.array(elemento[0:-1]).reshape(-1,sz), np.array(lista[0][0:-1]).reshape(-1,sz))]
+
+        resposta = [lista[0], dstnce]
+        for i in lista: #looping for each list of current codebook
+            distancia = self.nancosinedist(np.array(elemento[0:-1]).reshape(-1,sz), np.array(i[0:-1]).reshape(-1,sz))
+            if distancia < resposta[1]: #  compare distancia (of training data)_ to each data in lista codebook
                 resposta = [i, distancia]
         return resposta[0]
 
@@ -167,29 +205,36 @@ def random_cores(qtd: int = 3):
 # ====================
 
 # import matplotlib.pyplot as plt
+# dataset = importar_dataset("/Users/azkario/Google Drive/Doctorate (S3)/00023_lvq_python/lvq/datas/ble_ref_mini.csv")
 dataset = importar_dataset("/Users/azkario/Google Drive/Doctorate (S3)/00023_lvq_python/lvq/datas/IRIS.csv")
 #
 
 # print("Precisão: ",# Dados normalizados
 print("Algorithm with normalized data between 0 - 1")
 iris_norm = LVQ(dataset)
+
 iris_norm.triagem(0.75) #screening
 iris_norm.normalizar()
-iris_norm.resumir(n=8, e=13, t=0.5) #summarize iris_norm.testar(), "% \n")
-# classes = iris_norm.classes
-#
-# classes_cor = {}
-# cores = random_cores(len(classes))
-# for index, classe in enumerate(classes):
-#     classes_cor[classe] = cores[index]
-#
-# for elemento in iris_norm.dataset:
-#     plt.plot(elemento[0], elemento[1], 'o', color=classes_cor[elemento[-1]])
-#
-# for representante in iris_norm.codebook:
-#     plt.plot(representante[0], representante[1], 'D', ms=10, mfc='none', color=classes_cor[representante[-1]])
-#
-# plt.show()
+iris_norm.resumir(n=8, e=13, t=0.5)#(n=2, e=2, t=0.5)
+for reprs in iris_norm.representantes:
+    print(reprs)
+
+#summarize
+print("Precisão: ", iris_norm.testar(), "% \n")
+classes = iris_norm.classes
+
+classes_cor = {}
+cores = random_cores(len(classes))
+for index, classe in enumerate(classes):
+    classes_cor[classe] = cores[index]
+
+for elemento in iris_norm.dataset:
+    plt.plot(elemento[0], elemento[1], 'o', color=classes_cor[elemento[-1]])
+
+for representante in iris_norm.codebook:
+    plt.plot(representante[0], representante[1], 'D', ms=10, mfc='none', color=classes_cor[representante[-1]])
+
+plt.show()
 
 # Sem normalização
 print("Algorithm with non-normalized data")
