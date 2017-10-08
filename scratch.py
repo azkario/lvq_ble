@@ -79,9 +79,10 @@ class LVQ():
         # Random generation of the initial elements of the codebook
         self.codebook = [[]] * n
         for i in range(n):
-            self.codebook[i] = [0] * (self.qtd_caracteristicas + 1)
-            for caracteristica in range(self.qtd_caracteristicas + 1):
-                self.codebook[i][caracteristica] = random.choice(self.dados)[caracteristica]
+            self.codebook[i] = random.choice(self.dados)
+            # self.codebook[i] = [0] * (self.qtd_caracteristicas + 1)
+            # for caracteristica in range(self.qtd_caracteristicas + 1):
+            #     self.codebook[i][caracteristica] = random.choice(self.dados)[caracteristica]
 
 
         for epoca in range(e):
@@ -205,36 +206,34 @@ def random_cores(qtd: int = 3):
 # ====================
 
 # import matplotlib.pyplot as plt
-# dataset = importar_dataset("/Users/azkario/Google Drive/Doctorate (S3)/00023_lvq_python/lvq/datas/ble_ref_mini.csv")
-dataset = importar_dataset("/Users/azkario/Google Drive/Doctorate (S3)/00023_lvq_python/lvq/datas/IRIS.csv")
+dataset = importar_dataset("/Users/azkario/Google Drive/Doctorate (S3)/00023_lvq_python/lvq/datas/ble_ref_mini1.csv")
+# dataset = importar_dataset("/Users/azkario/Google Drive/Doctorate (S3)/00023_lvq_python/lvq/datas/IRIS.csv")
 #
 
-# print("Precisão: ",# Dados normalizados
-print("Algorithm with normalized data between 0 - 1")
-iris_norm = LVQ(dataset)
+# print("Algorithm with normalized data between 0 - 1")
+# iris_norm = LVQ(dataset)
+#
+# iris_norm.triagem(0.75) #screening
+# iris_norm.normalizar()
+# iris_norm.resumir(n=15, e=26, t=0.5)#(n=2, e=2, t=0.5)
+# for reprs in iris_norm.representantes:
+#     print(reprs)
+# print("Precisão: ", iris_norm.testar(), "% \n")
 
-iris_norm.triagem(0.75) #screening
-iris_norm.normalizar()
-iris_norm.resumir(n=8, e=13, t=0.5)#(n=2, e=2, t=0.5)
-for reprs in iris_norm.representantes:
-    print(reprs)
-
-#summarize
-print("Precisão: ", iris_norm.testar(), "% \n")
-classes = iris_norm.classes
-
-classes_cor = {}
-cores = random_cores(len(classes))
-for index, classe in enumerate(classes):
-    classes_cor[classe] = cores[index]
-
-for elemento in iris_norm.dataset:
-    plt.plot(elemento[0], elemento[1], 'o', color=classes_cor[elemento[-1]])
-
-for representante in iris_norm.codebook:
-    plt.plot(representante[0], representante[1], 'D', ms=10, mfc='none', color=classes_cor[representante[-1]])
-
-plt.show()
+# classes = iris_norm.classes
+#
+# classes_cor = {}
+# cores = random_cores(len(classes))
+# for index, classe in enumerate(classes):
+#     classes_cor[classe] = cores[index]
+#
+# for elemento in iris_norm.dataset:
+#     plt.plot(elemento[0], elemento[1], 'o', color=classes_cor[elemento[-1]])
+#
+# for representante in iris_norm.codebook:
+#     plt.plot(representante[0], representante[1], 'D', ms=10, mfc='none', color=classes_cor[representante[-1]])
+#
+# plt.show()
 
 # Sem normalização
 print("Algorithm with non-normalized data")
