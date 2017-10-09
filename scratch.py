@@ -75,11 +75,15 @@ class LVQ():
          : param e: numero de epocas / number of iteration
          : param n: number of coodbook elements
         """
+
+        idx_proto_init = np.array([40,51,25,46,55,67,3,89,34,60])
         # Geracacao aleatorio dos elementos iniciais do codebook
         # Random generation of the initial elements of the codebook
         self.codebook = [[]] * n
         for i in range(n):
-            self.codebook[i] = random.choice(self.dados)
+            # self.codebook[i] = random.choice(self.dados) #if random generated
+            self.codebook[i] = self.dados[idx_proto_init[i]]
+
             # self.codebook[i] = [0] * (self.qtd_caracteristicas + 1)
             # for caracteristica in range(self.qtd_caracteristicas + 1):
             #     self.codebook[i][caracteristica] = random.choice(self.dados)[caracteristica]
@@ -94,7 +98,8 @@ class LVQ():
                     o = 1
                 for caracteristica in range(self.qtd_caracteristicas): #proceed to update representante
                     erro = (elemento[caracteristica] - representante[caracteristica])
-                    representante[caracteristica] += (erro * taxa * o)
+                    if (~np.isnan(erro)):
+                        representante[caracteristica] += (erro * taxa * o)
 
         #     print("end of elemento iteration")
         # print("end of epoca iteration")
@@ -215,10 +220,10 @@ dataset = importar_dataset("/Users/azkario/Google Drive/Doctorate (S3)/00023_lvq
 #
 # iris_norm.triagem(0.75) #screening
 # iris_norm.normalizar()
-# iris_norm.resumir(n=15, e=26, t=0.5)#(n=2, e=2, t=0.5)
+# iris_norm.resumir(n=10, e=13, t=0.2)#(n=2, e=2, t=0.5)
+# print("Precisão normalized: ", iris_norm.testar(), "% \n")
 # for reprs in iris_norm.representantes:
 #     print(reprs)
-# print("Precisão: ", iris_norm.testar(), "% \n")
 
 # classes = iris_norm.classes
 #
@@ -239,7 +244,7 @@ dataset = importar_dataset("/Users/azkario/Google Drive/Doctorate (S3)/00023_lvq
 print("Algorithm with non-normalized data")
 iris = LVQ(dataset)
 iris.triagem(0.75)
-iris.resumir(n=8, e=13, t=0.5)
-print("Precisão: ", iris.testar(),"% \n")
+iris.resumir(n=10, e=13, t=0.2)
+print("Precisão non-normalized: ", iris.testar(),"% \n")
 for representante in iris.representantes:
   print(representante)
